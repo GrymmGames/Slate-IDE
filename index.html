@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Slate</title>
+<link rel="icon" type="image/png" href="./images/favicon.png">
+<style>
+  /* basic layout */
+  html,body{height:100%;margin:0;font-family:monospace;}
+  body{display:flex;height:100vh;transition:background .18s,color .18s;}
+  body.dark{background:#1e1e1e;color:#ddd;}
+  body.light{background:#fafafa;color:#111;}
+
+  /* sidebar */
+  #sidebar{width:260px;border-right:1px solid;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto}
+  button{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,0.03)}
+  button:hover{opacity:.9}
+  #fileTree{flex:1;overflow:auto;padding-top:6px}
+  .node{cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+  .node:hover{background:rgba(255,255,255,0.02)}
+  .folder>.children{margin-left:12px;display:none;flex-direction:column}
+  .folder.open>.children{display:flex}
+  .selected{background:rgba(100,150,255,0.16) !important}
+
+  /* top area + editor region */
+  #main{flex:1;display:flex;flex-direction:column;height:100%}
+  #toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid;align-items:center;flex-wrap:wrap}
+  .tab{margin-left:6px;padding:6px 8px;border-radius:6px;background:transparent}
+  .tab.active{background:rgba(100,150,255,0.16)}
+  #editors{flex:1;display:flex;min-height:0} /* allow children to scroll */
+  .pane{flex:1;display:flex;flex-direction:column;border-left:1px solid;min-width:0}
+  .pane.hidden{display:none}
+  .paneTabs{display:flex;gap:6px;padding:6px;border-bottom:1px solid;overflow:auto}
+  .ace_editor{height:100% !important; width:100% !important;}
+
+/* modal */
+#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:40}
+#modal{min-width:320px;background:inherit;border:1px solid;padding:14px;border-radius:8px}
+#modal input, #modal select, #modal textarea{width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.1);box-sizing:border-box;font-family:inherit}
+#modal label{display:block;margin-top:6px;font-size:13px}
+
+/* small helper */
+.small{font-size:13px;color:inherit;opacity:.85}
+.iconBtn{background:transparent;border-radius:6px;padding:6px}
+</style>
+
+<!-- ace -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ace.js"></script>
+</head>
+<body class="dark">
+  <div id="sidebar">
+    <div style="display:flex;gap:6px">
+      <button onclick="showNewFileModal()">New File</button>
+      <button onclick="showNewFolderModal()">New Folder</button>
+    </div>
+
+    <div style="display:flex;gap:6px">
+      <button onclick="showSettings()">Settings</button>
+      <button onclick="openSearchModal()">Search</button>
+    </div>
+
+    <div id="fileTree"></div>
+    <div class="small" style="padding-top:8px">Tip: select a folder/file then create new items inside it. Click a tab to open in the last-focused pane.</div>
+  </div>
+
+  <div id="main">
+    <div id="toolbar">
+      <button onclick="saveFile()">Export</button>
+      <button onclick="importFile()">Import</button>
+      <div id="paneIndicator" class="small" style="margin-left:auto">Active pane: A</div>
+    </div>
+
+    <div id="editors">
+      <div id="paneA" class="pane">
+        <div id="tabsA" class="paneTabs"></div>
+        <div id="editorA" style="flex:1;min-height:0"></div>
+      </div>
+      <div id="paneB" class="pane hidden" style="border-left:1px solid rgba(255,255,255,0.03)">
+        <div id="tabsB" class="paneTabs"></div>
+        <div id="editorB" style="flex:1;min-height:0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- modal -->
+  <div id="modalOverlay"><div id="modal">
+    <div id="modalMessage" class="small"></div>
+    <input id="modalInput" style="display:none" />
+    <input id="modalSearch" style="display:none" placeholder="search..." />
+    <input id="modalReplace" style="display:none" placeholder="replace with..." />
+    <select id="modalSelect" style="display:none"></select>
+    <div id="modalButtons" style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button onclick="closeModal(false)">Cancel</button>
+      <button onclick="closeModal(true)">OK</button>
+    </div>
+  </div></div>
+
+<script>
+/* ================
+   Core state
+   ================ */
+const fileTreeRoot = { type: "folder", name: "root", children: [] };
+let currentNode = null;          // selected node (file or folder)
+let activePane = "A";            // 'A' or 'B' (last-focused pane)
+let paneBindings = { A: null, B: null }; // which node (file) is open in pane
+let openFiles = { A: [], B: [] }; // tabs per pane
+
+/* ================
+   Ace editors (two instances)
+   ================ */
+const editorA = ace.edit("editorA");
+const editorB = ace.edit("editorB");
+editorA.setTheme("ace/theme/monokai"); editorB.setTheme("ace/theme/monokai");
+editorA.session.setMode("ace/mode/text"); editorB.session.setMode("ace/mode/text");
+editorA.setOptions({fontSize:"14px", showLineNumbers:true});
+editorB.setOptions({fontSize:"14px", showLineNumbers:true});
+
+// helper to get pane editor
+function getEditorForPane(p){ return p==="A" ? editorA : editorB; }
+function getTabsForPane(p){ return document.getElementById(p==="A" ? "tabsA" : "tabsB"); }
+function getPaneDiv(p){ return document.getElementById(p==="A" ? "paneA" : "paneB"); }
+
+/* focus tracking */
+editorA.on("focus", ()=>{ activePane="A"; updatePaneIndicator(); });
+editorB.on("focus", ()=>{ activePane="B"; updatePaneIndicator(); });
+function updatePaneIndicator(){ document.getElementById("paneIndicator").textContent = "Active pane: " + activePane; }
+
+/* sync function: when an editor changes, update bound node content and mirror if necessary */
+function bindChangeHandlers(){
+  editorA.on("change", ()=> {
+    const node = paneBindings.A;
+    if(node){ node.content = editorA.getValue(); mirrorIfSame(node,"A"); }
+  });
+  editorB.on("change", ()=> {
+    const node = paneBindings.B;
+    if(node){ node.content = editorB.getValue(); mirrorIfSame(node,"B"); }
+  });
+}
+function mirrorIfSame(node, sourcePane){
+  // if same file open in other pane, update it too (without triggering infinite loop)
+  const other = sourcePane === "A" ? "B" : "A";
+  if(paneBindings[other] && paneBindings[other] === node){
+    const ed = getEditorForPane(other);
+    const cursor = ed.getCursorPosition();
+    ed.off("changeMirror", ()=>{}); // no-op placeholder (Ace can't easily remove anonymous handlers), we'll just set value carefully
+    ed.setValue(node.content, -1);
+    ed.moveCursorToPosition(cursor);
+  }
+}
+bindChangeHandlers();
+
+/* ================
+   Tree rendering (recursive)
+   ================ */
+function renderNode(node, container){
+  const wrapper = document.createElement("div");
+  wrapper.className = node.type === "folder" ? "folder" : "file";
+
+  const label = document.createElement("div");
+  label.className = "node";
+  label.textContent = node.name;
+  // selection / click
+  label.onclick = (ev)=>{
+    ev.stopPropagation();
+    currentNode = node;
+    highlightSelection();
+    if(node.type === "file") openInPane(node, activePane);
+    else {
+      // folder toggle open/close
+      wrapper.classList.toggle("open");
+    }
+  };
+
+  // small delete button for quick delete
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.gap = "6px";
+  actions.style.alignItems = "center";
+
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "×"; delBtn.className = "iconBtn";
+  delBtn.onclick = async (e)=>{ e.stopPropagation(); currentNode = node; highlightSelection(); await deleteNode(); };
+
+  actions.appendChild(delBtn);
+  label.appendChild(actions);
+  wrapper.appendChild(label);
+
+  if(node.type === "folder"){
+    const children = document.createElement("div"); children.className = "children";
+    node.children.forEach(child=> renderNode(child, children) );
+    wrapper.appendChild(children);
+  }
+  container.appendChild(wrapper);
+}
+
+function refreshTree(){
+  const tree = document.getElementById("fileTree");
+  tree.innerHTML = "";
+  fileTreeRoot.children.forEach(n => renderNode(n, tree));
+  highlightSelection();
+}
+function highlightSelection(){
+  document.querySelectorAll("#fileTree .node").forEach(n=> n.classList.remove("selected"));
+  if(!currentNode) return;
+  // find the first node element that matches by name+type (names don't have to be unique but this is simple)
+  const nodes = [...document.querySelectorAll("#fileTree .node")];
+  const match = nodes.find(el => el.firstChild && el.textContent && el.textContent.startsWith(currentNode.name));
+  if(match) match.classList.add("selected");
+}
+
+/* ================
+   Opening, tabs and bindings
+   ================ */
+function openInPane(node, pane){
+  if(node.type !== "file") return;
+  paneBindings[pane] = node;
+  if(!openFiles[pane].includes(node)) openFiles[pane].push(node);
+  renderTabs(pane);
+  const ed = getEditorForPane(pane);
+  ed.setValue(node.content || "", -1);
+  const ext = node.name.split(".").pop();
+  const modes = {
+    js: "javascript",
+    ts: "typescript",
+    html: "html",
+    css: "css",
+    json: "json",
+    md: "markdown",
+    py: "python",
+    java: "java",
+    cpp: "c_cpp",
+    c: "c_cpp",
+    cs: "csharp",
+    php: "php",
+    rb: "ruby",
+    go: "golang",
+    rs: "rust",
+    kt: "kotlin",
+    swift: "swift",
+    sh: "sh",
+    sql: "sql",
+    xml: "xml",
+    yml: "yaml",
+    yaml: "yaml",
+    txt: "text"
+};
+editor.session.setMode("ace/mode/" + (modes[ext] || "text"));
+
+  ed.focus();
+}
+function renderTabs(pane){
+  const tabsEl = getTabsForPane(pane);
+  tabsEl.innerHTML = "";
+  openFiles[pane].forEach(node=>{
+    const btn = document.createElement("button");
+    btn.className = "tab" + (paneBindings[pane] === node ? " active" : "");
+    btn.textContent = node.name;
+    btn.onclick = ()=> openInPane(node, pane);
+    tabsEl.appendChild(btn);
+  });
+}
+
+/* ================
+   Modal system (central)
+   ================ */
+let modalResolve;
+function showModal(opts){
+  // opts: { message, input, search, replace, select: [..] }
+  return new Promise(resolve=>{
+    modalResolve = resolve;
+    const overlay = document.getElementById("modalOverlay");
+    const msg = document.getElementById("modalMessage");
+    const inp = document.getElementById("modalInput");
+    const s = document.getElementById("modalSelect");
+    const search = document.getElementById("modalSearch");
+    const replace = document.getElementById("modalReplace");
+
+    // reset
+    inp.style.display = s.style.display = search.style.display = replace.style.display = "none";
+    s.innerHTML = "";
+
+    msg.textContent = opts.message || "";
+    if(opts.input){ inp.style.display = "block"; inp.value = opts.default || ""; inp.focus(); }
+    if(opts.select){ s.style.display = "block"; s.innerHTML = opts.select.map(v=>`<option value="${v}">${v}</option>`).join(""); }
+    if(opts.search){ search.style.display = "block"; search.value = opts.search || ""; search.focus(); }
+    if(opts.replace){ replace.style.display = "block"; replace.value = opts.replace || ""; }
+
+    overlay.style.display = "flex";
+  });
+}
+function closeModal(ok){
+  const overlay = document.getElementById("modalOverlay");
+  const inp = document.getElementById("modalInput");
+  const s = document.getElementById("modalSelect");
+  const search = document.getElementById("modalSearch");
+  const replace = document.getElementById("modalReplace");
+  overlay.style.display = "none";
+  if(!ok) return modalResolve(false);
+  if(inp.style.display === "block") return modalResolve(inp.value);
+  if(s.style.display === "block") return modalResolve(s.value);
+  if(search.style.display === "block" || replace.style.display === "block") {
+    return modalResolve({ search: search.value, replace: replace.value });
+  }
+  modalResolve(true);
+}
+
+/* ================
+   File operations
+   ================ */
+async function showNewFileModal(){
+  // create in selected folder if folder selected, else root
+  const name = await showModal({ message: "Name new file:", input:true });
+  if(!name) return;
+  const parent = (currentNode && currentNode.type === "folder") ? currentNode : fileTreeRoot;
+  parent.children.push({ type: "file", name: name, content: "" });
+  refreshTree();
+}
+async function showNewFolderModal(){
+  const name = await showModal({ message: "Name new folder:", input:true });
+  if(!name) return;
+  const parent = (currentNode && currentNode.type === "folder") ? currentNode : fileTreeRoot;
+  parent.children.push({ type: "folder", name: name, children: [] });
+  refreshTree();
+}
+
+async function deleteNode(){
+  if(!currentNode) return alert("No node selected");
+  const ok = await showModal({ message: `Delete "${currentNode.name}"?`, input:false });
+  if(!ok) return;
+  // recursive remove
+  function remove(node, parent){
+    parent.children = parent.children.filter(c=>{
+      if(c === node) return false;
+      if(c.type === "folder") remove(node, c);
+      return true;
+    });
+  }
+  // find parent and remove - we'll do a recursive walk
+  function removeNode(node, parent){
+    parent.children = parent.children.filter(c=>{
+      if(c === node) return false;
+      if(c.type === "folder") removeNode(node, c);
+      return true;
+    });
+  }
+  removeNode(currentNode, fileTreeRoot);
+
+  // if deleted was bound to panes/tabs, clear them
+  ["A","B"].forEach(p=>{
+    if(paneBindings[p] === currentNode) { paneBindings[p]=null; getEditorForPane(p).setValue("", -1); }
+    openFiles[p] = openFiles[p].filter(n => n !== currentNode);
+    renderTabs(p);
+  });
+
+  currentNode = null;
+  refreshTree();
+}
+
+function importFile(){
+  const input = document.createElement("input"); input.type = "file";
+  input.onchange = (e)=>{
+    const f = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ()=> {
+      fileTreeRoot.children.push({ type: "file", name: f.name, content: reader.result });
+      refreshTree();
+    };
+    reader.readAsText(f);
+  };
+  input.click();
+}
+
+function saveFile(){
+  const bound = paneBindings[activePane];
+  if(!bound) return alert("No file open in active pane");
+  const a = document.createElement("a");
+  const blob = new Blob([bound.content || ""], { type: "text/plain" });
+  a.href = URL.createObjectURL(blob); a.download = bound.name; a.click();
+}
+
+/* ================
+   Search & Replace (current pane)
+   ================ */
+function openSearchModal(){
+  // open modal with search & replace inputs
+  showModal({ message: "Search & Replace (current pane file)", search:"", replace:"" }).then(result=>{
+    if(!result) return;
+    const { search, replace } = result;
+    if(!search) return alert("Enter search text");
+    const pane = activePane;
+    const node = paneBindings[pane];
+    if(!node) return alert("No file open in active pane");
+    // find first occurrence and/or replace all
+    // Ask user: replace all?
+    showModal({ message: `Replace all occurrences of "${search}" in ${node.name}? Type "yes" to replace all, anything else to replace first occurrence.`, input:true }).then(resp=>{
+      if(!resp) return;
+      const content = node.content || "";
+      if(resp.toLowerCase() === "yes"){
+        const newContent = content.split(search).join(replace);
+        node.content = newContent;
+        // update editor(s)
+        if(paneBindings.A === node) editorA.setValue(node.content, -1);
+        if(paneBindings.B === node) editorB.setValue(node.content, -1);
+      } else {
+        const idx = content.indexOf(search);
+        if(idx === -1) return alert("Not found");
+        node.content = content.slice(0, idx) + replace + content.slice(idx + search.length);
+        if(paneBindings.A === node) editorA.setValue(node.content, -1);
+        if(paneBindings.B === node) editorB.setValue(node.content, -1);
+        // keep cursor near replaced text in active editor
+        const ed = getEditorForPane(pane);
+        ed.focus();
+      }
+    });
+  });
+}
+
+/* ================
+   Split handling
+   ================ */
+function toggleSplit(){
+  const paneB = document.getElementById("paneB");
+  if(paneB.classList.contains("hidden")){
+    paneB.classList.remove("hidden");
+    // if B empty, clone current file into B
+    if(!paneBindings.B && paneBindings.A){ openInPane(paneBindings.A, "B"); }
+  } else {
+    paneB.classList.add("hidden");
+  }
+}
+
+/* ================
+   Settings (theme/font/lines)
+   ================ */
+async function showSettings(){
+  const theme = await showModal({ message: "Choose theme:", select:["monokai","github","solarized_dark","dracula"] });
+  if(theme){ editorA.setTheme("ace/theme/"+theme); editorB.setTheme("ace/theme/"+theme); }
+  const font = await showModal({ message: "Font size (px):", input:true, default:"14" });
+  if(font){ editorA.setOptions({fontSize:font}); editorB.setOptions({fontSize:font}); }
+  const lines = await showModal({ message: "Show line numbers? (yes/no)", input:true, default: editorA.getOption("showLineNumbers") ? "yes" : "no" });
+  editorA.setOption("showLineNumbers", (lines || "yes").toLowerCase() === "yes");
+  editorB.setOption("showLineNumbers", (lines || "yes").toLowerCase() === "yes");
+  const themeMode = (theme === "github") ? "light" : "dark";
+  document.body.className = themeMode;
+}
+
+/* ================
+   Keyboard shortcuts
+   ================ */
+document.addEventListener("keydown", (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key === "s"){ e.preventDefault(); saveFile(); }
+  if((e.ctrlKey || e.metaKey) && e.key === "n"){ e.preventDefault(); showNewFileModal(); }
+  if((e.ctrlKey || e.metaKey) && e.key === "o"){ e.preventDefault(); importFile(); }
+  if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f"){ e.preventDefault(); openSearchModal(); }
+  if((e.ctrlKey || e.metaKey) && e.key === "Tab"){ e.preventDefault(); cycleTabs(); }
+});
+
+/* cycle through open files in active pane */
+function cycleTabs(){
+  const arr = openFiles[activePane];
+  if(!arr.length) return;
+  const idx = arr.indexOf(paneBindings[activePane]);
+  const next = arr[(idx + 1) % arr.length];
+  openInPane(next, activePane);
+}
+
+/* ================
+   Init: create a starter file and render
+   ================ */
+fileTreeRoot.children.push({ type:"file", name:"README.txt", content:"Welcome to your Minimal IDE.\nUse Ctrl+N to create files.\n" });
+fileTreeRoot.children.push({ type:"folder", name:"src", children: [ { type:"file", name:"main.js", content:"console.log('hi');" } ] });
+refreshTree();
+
+/* expose some functions on window for quick debugging (optional) */
+window.openInPane = openInPane;
+window.toggleSplit = toggleSplit;
+window.showNewFileModal = showNewFileModal;
+window.showNewFolderModal = showNewFolderModal;
+window.showSettings = showSettings;
+window.openSearchModal = openSearchModal;
+
+</script>
+</body>
+</html>
