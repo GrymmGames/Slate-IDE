@@ -5,47 +5,80 @@
 <title>Slate</title>
 <link rel="icon" type="image/png" href="./images/favicon.png">
 <style>
-/* basic layout */
-html,body{height:100%;margin:0;font-family:monospace;}
-body{display:flex;height:100vh;transition:background .18s,color .18s;}
-body.dark{background:#1e1e1e;color:#ddd;}
-body.light{background:#fafafa;color:#111;}
+  /* basic layout */
+  html,body{height:100%;margin:0;font-family:monospace;}
+  body{display:flex;height:100vh;transition:background .18s,color .18s;}
+  body.dark{background:#1e1e1e;color:#ddd;}
+  body.light{background:#fafafa;color:#111;}
 
-/* sidebar */
-#sidebar{width:260px;border-right:1px solid;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto}
-button{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,0.03)}
-button:hover{opacity:.9}
-#fileTree{flex:1;overflow:auto;padding-top:6px}
-.node{cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.node:hover{background:rgba(255,255,255,0.02)}
-.folder>.children{margin-left:12px;display:none;flex-direction:column}
-.folder.open>.children{display:flex}
-.selected{background:rgba(100,150,255,0.16) !important}
+  /* sidebar */
+  #sidebar{width:260px;border-right:1px solid;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto}
+  button{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,0.03)}
+  button:hover{opacity:.9}
+  #fileTree{flex:1;overflow:auto;padding-top:6px}
+  .node{cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+  .node:hover{background:rgba(255,255,255,0.02)}
+  .folder>.children{margin-left:12px;display:none;flex-direction:column}
+  .folder.open>.children{display:flex}
+  .selected{background:rgba(100,150,255,0.16) !important}
 
-/* top area + editor region */
-#main{flex:1;display:flex;flex-direction:column;height:100%}
-#toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid;align-items:center;flex-wrap:wrap}
-.tab{margin-left:6px;padding:6px 8px;border-radius:6px;background:transparent}
-.tab.active{background:rgba(100,150,255,0.16)}
-#editors{flex:1;display:flex;min-height:0} /* allow children to scroll */
-.pane{flex:1;display:flex;flex-direction:column;border-left:1px solid;min-width:0}
-.pane.hidden{display:none}
-.paneTabs{display:flex;gap:6px;padding:6px;border-bottom:1px solid;overflow:auto}
-.ace_editor{height:100% !important; width:100% !important;}
+  /* top area + editor region */
+  #main{flex:1;display:flex;flex-direction:column;height:100%}
+  #toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid;align-items:center;flex-wrap:wrap}
+  .tab{margin-left:6px;padding:6px 8px;border-radius:6px;background:transparent}
+  .tab.active{background:rgba(100,150,255,0.16)}
+  #editors{flex:1;display:flex;min-height:0} /* allow children to scroll */
+  .pane{flex:1;display:flex;flex-direction:column;border-left:1px solid;min-width:0}
+  .pane.hidden{display:none}
+  .paneTabs{display:flex;gap:6px;padding:6px;border-bottom:1px solid;overflow:auto}
+  .ace_editor{height:100% !important; width:100% !important;}
 
-/* modal */
-#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:40}
-#modal{min-width:320px;background:inherit;border:1px solid;padding:14px;border-radius:8px}
-#modal input, #modal select, #modal textarea{width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.1);box-sizing:border-box;font-family:inherit}
-#modal label{display:block;margin-top:6px;font-size:13px}
+  /* 💡 NEW: Status bar styling */
+  #statusBar{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    border-top: 1px solid rgba(255,255,255,0.03);
+    font-size: 12px;
+  }
 
-/* small helper */
-.small{font-size:13px;color:inherit;opacity:.85}
-.iconBtn{background:transparent;border-radius:6px;padding:6px}
+  /* 💡 NEW: Terminal styling */
+  #terminal{
+    background: rgba(0,0,0,.15);
+    height: 200px;
+    padding: 8px;
+    font-family: monospace;
+    overflow: auto;
+    border-top: 1px solid rgba(255,255,255,0.03);
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+  .terminal-input{
+    background: transparent;
+    color: inherit;
+    border: none;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+  }
+  .terminal-line{
+    margin-bottom: 4px;
+  }
+
+  /* modal */
+  #modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:40}
+  #modal{min-width:320px;background:inherit;border:1px solid;padding:14px;border-radius:8px}
+  #modal input, #modal select, #modal textarea{width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.1);box-sizing:border-box;font-family:inherit}
+  #modal label{display:block;margin-top:6px;font-size:13px}
+
+  /* small helper */
+  .small{font-size:13px;color:inherit;opacity:.85}
+  .iconBtn{background:transparent;border-radius:6px;padding:6px}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ace.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ext-language_tools.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-html.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-css.min.js"></script>
@@ -66,7 +99,10 @@ button:hover{opacity:.9}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-yaml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-text.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/theme-github.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/theme-monokai.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/theme-solarized_dark.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/theme-dracula.min.js"></script>
 </head>
 <body class="dark">
   <div id="sidebar">
@@ -88,7 +124,7 @@ button:hover{opacity:.9}
     <div id="toolbar">
       <button onclick="saveFile()">Export</button>
       <button onclick="importFile()">Import</button>
-      <button onclick="toggleSplit()">Split</button> <div id="paneIndicator" class="small" style="margin-left:auto">Active pane: A</div>
+      <button onclick="toggleSplit()">Split</button>
     </div>
 
     <div id="editors">
@@ -99,6 +135,18 @@ button:hover{opacity:.9}
       <div id="paneB" class="pane hidden" style="border-left:1px solid rgba(255,255,255,0.03)">
         <div id="tabsB" class="paneTabs"></div>
         <div id="editorB" style="flex:1;min-height:0"></div>
+      </div>
+    </div>
+    
+    <div id="statusBar">
+      <span id="lineCol">Ln 1, Col 1</span>
+      <span id="statusMessage" style="margin-left:auto"></span>
+    </div>
+
+    <div id="terminal" style="display:none">
+      <div id="terminalOutput"></div>
+      <div class="terminal-line">
+        <span id="prompt">></span> <input id="terminalInput" class="terminal-input" onkeydown="handleTerminalInput(event)" />
       </div>
     </div>
   </div>
@@ -120,10 +168,11 @@ button:hover{opacity:.9}
   Core state
   ================ */
 const fileTreeRoot = { type: "folder", name: "root", children: [] };
-let currentNode = null;        // selected node (file or folder)
-let activePane = "A";          // 'A' or 'B' (last-focused pane)
-let paneBindings = { A: null, B: null }; // which node (file) is open in pane
-let openFiles = { A: [], B: [] }; // tabs per pane
+let currentNode = null;
+let activePane = "A";
+let paneBindings = { A: null, B: null };
+let openFiles = { A: [], B: [] };
+let terminalOpen = false;
 
 /* ================
   Ace editors (two instances)
@@ -131,9 +180,12 @@ let openFiles = { A: [], B: [] }; // tabs per pane
 const editorA = ace.edit("editorA");
 const editorB = ace.edit("editorB");
 editorA.setTheme("ace/theme/monokai"); editorB.setTheme("ace/theme/monokai");
-editorA.session.setMode("ace/mode/text"); editorB.session.setMode("ace/mode/text");
-editorA.setOptions({fontSize:"14px", showLineNumbers:true});
-editorB.setOptions({fontSize:"14px", showLineNumbers:true});
+editorA.setOptions({fontSize:"14px", showLineNumbers:true, enableBasicAutocompletion: true, enableLiveAutocompletion: true});
+editorB.setOptions({fontSize:"14px", showLineNumbers:true, enableBasicAutocompletion: true, enableLiveAutocompletion: true});
+
+// 💡 NEW: Multi-cursor support
+editorA.setOption("enableMulticursor", true);
+editorB.setOption("enableMulticursor", true);
 
 // helper to get pane editor
 function getEditorForPane(p){ return p==="A" ? editorA : editorB; }
@@ -141,9 +193,27 @@ function getTabsForPane(p){ return document.getElementById(p==="A" ? "tabsA" : "
 function getPaneDiv(p){ return document.getElementById(p==="A" ? "paneA" : "paneB"); }
 
 /* focus tracking */
-editorA.on("focus", ()=>{ activePane="A"; updatePaneIndicator(); });
-editorB.on("focus", ()=>{ activePane="B"; updatePaneIndicator(); });
+editorA.on("focus", ()=>{ activePane="A"; updatePaneIndicator(); updateStatusBar(); });
+editorB.on("focus", ()=>{ activePane="B"; updatePaneIndicator(); updateStatusBar(); });
 function updatePaneIndicator(){ document.getElementById("paneIndicator").textContent = "Active pane: " + activePane; }
+editorA.session.on("change", updateStatusBar);
+editorB.session.on("change", updateStatusBar);
+editorA.session.selection.on('changeCursor', updateStatusBar);
+editorB.session.selection.on('changeCursor', updateStatusBar);
+
+/* 💡 NEW: Status bar functionality */
+function updateStatusBar() {
+  const editor = getEditorForPane(activePane);
+  const cursor = editor.getCursorPosition();
+  document.getElementById("lineCol").textContent = `Ln ${cursor.row + 1}, Col ${cursor.column + 1}`;
+  const node = paneBindings[activePane];
+  const statusEl = document.getElementById("statusMessage");
+  if (node) {
+    statusEl.textContent = `File: ${node.name} [${editor.session.getMode().$id.split('/').pop()}]`;
+  } else {
+    statusEl.textContent = `No file open`;
+  }
+}
 
 /* sync function: when an editor changes, update bound node content and mirror if necessary */
 function bindChangeHandlers(){
@@ -157,17 +227,12 @@ function bindChangeHandlers(){
   });
 }
 function mirrorIfSame(node, sourcePane){
-  // if same file open in other pane, update it too (without triggering infinite loop)
   const other = sourcePane === "A" ? "B" : "A";
   if(paneBindings[other] && paneBindings[other] === node){
     const ed = getEditorForPane(other);
     const cursor = ed.getCursorPosition();
-    // 💡 FIX: The original code for mirrorIfSame was problematic and could cause issues.
-    // The corrected code here is more robust.
-    ed.session.off("change", ed.mirrorChangeHandler); // Remove old handler
     ed.setValue(node.content, -1);
     ed.moveCursorToPosition(cursor);
-    ed.mirrorChangeHandler = ed.session.on("change", ()=> { node.content = ed.getValue(); }); // Re-add handler
   }
 }
 bindChangeHandlers();
@@ -182,19 +247,27 @@ function renderNode(node, container){
   const label = document.createElement("div");
   label.className = "node";
   label.textContent = node.name;
-  // selection / click
+
+  label.ondblclick = (ev) => { // 💡 NEW: Double-click to rename
+    if(node.name === "root") return; // Cannot rename root
+    const newName = prompt("Rename:", node.name);
+    if(newName && newName !== node.name){
+      node.name = newName;
+      refreshTree();
+    }
+    ev.stopPropagation();
+  };
+  
   label.onclick = (ev)=>{
     ev.stopPropagation();
     currentNode = node;
     highlightSelection();
     if(node.type === "file") openInPane(node, activePane);
     else {
-      // folder toggle open/close
       wrapper.classList.toggle("open");
     }
   };
 
-  // small delete button for quick delete
   const actions = document.createElement("div");
   actions.style.display = "flex";
   actions.style.gap = "6px";
@@ -222,10 +295,10 @@ function refreshTree(){
   fileTreeRoot.children.forEach(n => renderNode(n, tree));
   highlightSelection();
 }
+
 function highlightSelection(){
   document.querySelectorAll("#fileTree .node").forEach(n=> n.classList.remove("selected"));
   if(!currentNode) return;
-  // find the first node element that matches by name+type (names don't have to be unique but this is simple)
   const nodes = [...document.querySelectorAll("#fileTree .node")];
   const match = nodes.find(el => el.firstChild && el.textContent && el.textContent.startsWith(currentNode.name));
   if(match) match.classList.add("selected");
@@ -243,33 +316,17 @@ function openInPane(node, pane){
   ed.setValue(node.content || "", -1);
   const ext=node.name.split(".").pop();
   const modes={
-    js: "javascript",
-    ts: "typescript",
-    html: "html",
-    css: "css",
-    json: "json",
-    md: "markdown",
-    py: "python",
-    java: "java",
-    cpp: "c_cpp",
-    c: "c_cpp",
-    cs: "csharp",
-    php: "php",
-    rb: "ruby",
-    go: "golang",
-    rs: "rust",
-    kt: "kotlin",
-    swift: "swift",
-    sh: "sh",
-    sql: "sql",
-    xml: "xml",
-    yml: "yaml",
-    yaml: "yaml",
-    txt: "text",
-  }; // 💡 FIX: Added missing closing bracket `}` and comma to modes object.
-  ed.session.setMode("ace/mode/" + (modes[ext] || "text")); // 💡 FIX: Changed editor to ed
+    js: "javascript", ts: "typescript", html: "html", css: "css", json: "json",
+    md: "markdown", py: "python", java: "java", cpp: "c_cpp", c: "c_cpp",
+    cs: "csharp", php: "php", rb: "ruby", go: "golang", rs: "rust",
+    kt: "kotlin", swift: "swift", sh: "sh", sql: "sql", xml: "xml",
+    yml: "yaml", yaml: "yaml", txt: "text",
+  };
+  ed.session.setMode("ace/mode/" + (modes[ext] || "text"));
   ed.focus();
+  updateStatusBar();
 }
+
 function renderTabs(pane){
   const tabsEl = getTabsForPane(pane);
   tabsEl.innerHTML = "";
@@ -287,7 +344,6 @@ function renderTabs(pane){
   ================ */
 let modalResolve;
 function showModal(opts){
-  // opts: { message, input, search, replace, select: [..] }
   return new Promise(resolve=>{
     modalResolve = resolve;
     const overlay = document.getElementById("modalOverlay");
@@ -297,7 +353,6 @@ function showModal(opts){
     const search = document.getElementById("modalSearch");
     const replace = document.getElementById("modalReplace");
 
-    // reset
     inp.style.display = s.style.display = search.style.display = replace.style.display = "none";
     s.innerHTML = "";
 
@@ -306,7 +361,7 @@ function showModal(opts){
     if(opts.select){ s.style.display = "block"; s.innerHTML = opts.select.map(v=>`<option value="${v}">${v}</option>`).join(""); }
     if(opts.search){ search.style.display = "block"; search.value = opts.search || ""; search.focus(); }
     if(opts.replace){ replace.style.display = "block"; replace.value = opts.replace || ""; }
-
+    
     overlay.style.display = "flex";
   });
 }
@@ -330,7 +385,6 @@ function closeModal(ok){
   File operations
   ================ */
 async function showNewFileModal(){
-  // create in selected folder if folder selected, else root
   const name = await showModal({ message: "Name new file:", input:true });
   if(!name) return;
   const parent = (currentNode && currentNode.type === "folder") ? currentNode : fileTreeRoot;
@@ -349,8 +403,7 @@ async function deleteNode(){
   if(!currentNode) return alert("No node selected");
   const ok = await showModal({ message: `Delete "${currentNode.name}"?`, input:false });
   if(!ok) return;
-  
-  // The original recursive remove function was flawed. This is a corrected, iterative approach.
+
   function findParent(node, parent){
     for(let i=0; i<parent.children.length; i++){
       if(parent.children[i] === node){
@@ -367,7 +420,6 @@ async function deleteNode(){
       parent.children = parent.children.filter(c => c !== currentNode);
   }
 
-  // if deleted was bound to panes/tabs, clear them
   ["A","B"].forEach(p=>{
     if(paneBindings[p] === currentNode) { paneBindings[p]=null; getEditorForPane(p).setValue("", -1); }
     openFiles[p] = openFiles[p].filter(n => n !== currentNode);
@@ -376,6 +428,7 @@ async function deleteNode(){
 
   currentNode = null;
   refreshTree();
+  updateStatusBar();
 }
 
 function importFile(){
@@ -386,6 +439,7 @@ function importFile(){
     reader.onload = ()=> {
       fileTreeRoot.children.push({ type: "file", name: f.name, content: reader.result });
       refreshTree();
+      openInPane(fileTreeRoot.children[fileTreeRoot.children.length - 1], activePane);
     };
     reader.readAsText(f);
   };
@@ -404,7 +458,6 @@ function saveFile(){
   Search & Replace (current pane)
   ================ */
 function openSearchModal(){
-  // open modal with search & replace inputs
   showModal({ message: "Search & Replace (current pane file)", search:"", replace:"" }).then(result=>{
     if(!result) return;
     const { search, replace } = result;
@@ -412,15 +465,12 @@ function openSearchModal(){
     const pane = activePane;
     const node = paneBindings[pane];
     if(!node) return alert("No file open in active pane");
-    // find first occurrence and/or replace all
-    // Ask user: replace all?
     showModal({ message: `Replace all occurrences of "${search}" in ${node.name}? Type "yes" to replace all, anything else to replace first occurrence.`, input:true }).then(resp=>{
       if(!resp) return;
       const content = node.content || "";
       if(resp.toLowerCase() === "yes"){
         const newContent = content.split(search).join(replace);
         node.content = newContent;
-        // update editor(s)
         if(paneBindings.A === node) editorA.setValue(node.content, -1);
         if(paneBindings.B === node) editorB.setValue(node.content, -1);
       } else {
@@ -429,7 +479,6 @@ function openSearchModal(){
         node.content = content.slice(0, idx) + replace + content.slice(idx + search.length);
         if(paneBindings.A === node) editorA.setValue(node.content, -1);
         if(paneBindings.B === node) editorB.setValue(node.content, -1);
-        // keep cursor near replaced text in active editor
         const ed = getEditorForPane(pane);
         ed.focus();
       }
@@ -444,7 +493,6 @@ function toggleSplit(){
   const paneB = document.getElementById("paneB");
   if(paneB.classList.contains("hidden")){
     paneB.classList.remove("hidden");
-    // if B empty, clone current file into B
     if(!paneBindings.B && paneBindings.A){ openInPane(paneBindings.A, "B"); }
   } else {
     paneB.classList.add("hidden");
@@ -467,6 +515,47 @@ async function showSettings(){
 }
 
 /* ================
+  💡 NEW: Integrated Terminal
+  ================ */
+function toggleTerminal(){
+  const terminal = document.getElementById("terminal");
+  terminalOpen = !terminalOpen;
+  terminal.style.display = terminalOpen ? "block" : "none";
+  if(terminalOpen){
+    document.getElementById("terminalInput").focus();
+  }
+}
+
+function handleTerminalInput(e){
+  if(e.key === "Enter"){
+    const input = e.target.value.trim();
+    if(input === "") return;
+    const output = document.getElementById("terminalOutput");
+    output.innerHTML += `<div class="terminal-line"><span style="color:#00c400">></span> ${input}</div>`;
+    
+    // Simple command handling
+    if(input === "clear"){
+      output.innerHTML = "";
+    } else if(input === "help"){
+      output.innerHTML += `
+      <div class="terminal-line">Available commands:</div>
+      <div class="terminal-line">clear - Clears the terminal output.</div>
+      <div class="terminal-line">help - Shows this help message.</div>
+      <div class="terminal-line">echo [text] - Repeats the text.</div>
+      `;
+    } else if(input.startsWith("echo ")){
+      const text = input.substring(5);
+      output.innerHTML += `<div class="terminal-line">${text}</div>`;
+    } else {
+      output.innerHTML += `<div class="terminal-line" style="color:red">Command not found: ${input}</div>`;
+    }
+    
+    e.target.value = "";
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+}
+
+/* ================
   Keyboard shortcuts
   ================ */
 document.addEventListener("keydown", (e)=>{
@@ -475,6 +564,7 @@ document.addEventListener("keydown", (e)=>{
   if((e.ctrlKey || e.metaKey) && e.key === "o"){ e.preventDefault(); importFile(); }
   if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f"){ e.preventDefault(); openSearchModal(); }
   if((e.ctrlKey || e.metaKey) && e.key === "Tab"){ e.preventDefault(); cycleTabs(); }
+  if((e.ctrlKey || e.metaKey) && e.key === "`"){ e.preventDefault(); toggleTerminal(); } // 💡 NEW: Shortcut for terminal
 });
 
 /* cycle through open files in active pane */
@@ -486,13 +576,6 @@ function cycleTabs(){
   openInPane(next, activePane);
 }
 
-/* ================
-  Init: create a starter file and render
-  ================ */
-fileTreeRoot.children.push({ type:"file", name:"README.txt", content:"Welcome to your Minimal IDE.\nUse Ctrl+N to create files.\n" });
-fileTreeRoot.children.push({ type:"folder", name:"src", children: [ { type:"file", name:"main.js", content:"console.log('hi');" } ] });
-refreshTree();
-
 /* expose some functions on window for quick debugging (optional) */
 window.openInPane = openInPane;
 window.toggleSplit = toggleSplit;
@@ -500,9 +583,9 @@ window.showNewFileModal = showNewFileModal;
 window.showNewFolderModal = showNewFolderModal;
 window.showSettings = showSettings;
 window.openSearchModal = openSearchModal;
-window.saveFile = saveFile; // 💡 FIX: Expose saveFile to make the button work.
-window.importFile = importFile; // 💡 FIX: Expose importFile to make the button work.
-
+window.saveFile = saveFile;
+window.importFile = importFile;
+window.toggleTerminal = toggleTerminal;
 </script>
 </body>
 </html>
