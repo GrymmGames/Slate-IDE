@@ -5,33 +5,33 @@
 <title>Slate</title>
 <link rel="icon" type="image/png" href="./images/favicon.png">
 <style>
-  /* basic layout */
-  html,body{height:100%;margin:0;font-family:monospace;}
-  body{display:flex;height:100vh;transition:background .18s,color .18s;}
-  body.dark{background:#1e1e1e;color:#ddd;}
-  body.light{background:#fafafa;color:#111;}
+/* basic layout */
+html,body{height:100%;margin:0;font-family:monospace;}
+body{display:flex;height:100vh;transition:background .18s,color .18s;}
+body.dark{background:#1e1e1e;color:#ddd;}
+body.light{background:#fafafa;color:#111;}
 
-  /* sidebar */
-  #sidebar{width:260px;border-right:1px solid;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto}
-  button{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,0.03)}
-  button:hover{opacity:.9}
-  #fileTree{flex:1;overflow:auto;padding-top:6px}
-  .node{cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
-  .node:hover{background:rgba(255,255,255,0.02)}
-  .folder>.children{margin-left:12px;display:none;flex-direction:column}
-  .folder.open>.children{display:flex}
-  .selected{background:rgba(100,150,255,0.16) !important}
+/* sidebar */
+#sidebar{width:260px;border-right:1px solid;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto}
+button{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,0.03)}
+button:hover{opacity:.9}
+#fileTree{flex:1;overflow:auto;padding-top:6px}
+.node{cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.node:hover{background:rgba(255,255,255,0.02)}
+.folder>.children{margin-left:12px;display:none;flex-direction:column}
+.folder.open>.children{display:flex}
+.selected{background:rgba(100,150,255,0.16) !important}
 
-  /* top area + editor region */
-  #main{flex:1;display:flex;flex-direction:column;height:100%}
-  #toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid;align-items:center;flex-wrap:wrap}
-  .tab{margin-left:6px;padding:6px 8px;border-radius:6px;background:transparent}
-  .tab.active{background:rgba(100,150,255,0.16)}
-  #editors{flex:1;display:flex;min-height:0} /* allow children to scroll */
-  .pane{flex:1;display:flex;flex-direction:column;border-left:1px solid;min-width:0}
-  .pane.hidden{display:none}
-  .paneTabs{display:flex;gap:6px;padding:6px;border-bottom:1px solid;overflow:auto}
-  .ace_editor{height:100% !important; width:100% !important;}
+/* top area + editor region */
+#main{flex:1;display:flex;flex-direction:column;height:100%}
+#toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid;align-items:center;flex-wrap:wrap}
+.tab{margin-left:6px;padding:6px 8px;border-radius:6px;background:transparent}
+.tab.active{background:rgba(100,150,255,0.16)}
+#editors{flex:1;display:flex;min-height:0} /* allow children to scroll */
+.pane{flex:1;display:flex;flex-direction:column;border-left:1px solid;min-width:0}
+.pane.hidden{display:none}
+.paneTabs{display:flex;gap:6px;padding:6px;border-bottom:1px solid;overflow:auto}
+.ace_editor{height:100% !important; width:100% !important;}
 
 /* modal */
 #modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:40}
@@ -44,8 +44,29 @@
 .iconBtn{background:transparent;border-radius:6px;padding:6px}
 </style>
 
-<!-- ace -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ace.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-c_cpp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-csharp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-golang.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-kotlin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-swift.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-sh.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/mode-text.min.js"></script>
+
 </head>
 <body class="dark">
   <div id="sidebar">
@@ -67,7 +88,7 @@
     <div id="toolbar">
       <button onclick="saveFile()">Export</button>
       <button onclick="importFile()">Import</button>
-      <div id="paneIndicator" class="small" style="margin-left:auto">Active pane: A</div>
+      <button onclick="toggleSplit()">Split</button> <div id="paneIndicator" class="small" style="margin-left:auto">Active pane: A</div>
     </div>
 
     <div id="editors">
@@ -82,7 +103,6 @@
     </div>
   </div>
 
-  <!-- modal -->
   <div id="modalOverlay"><div id="modal">
     <div id="modalMessage" class="small"></div>
     <input id="modalInput" style="display:none" />
@@ -97,17 +117,17 @@
 
 <script>
 /* ================
-   Core state
-   ================ */
+  Core state
+  ================ */
 const fileTreeRoot = { type: "folder", name: "root", children: [] };
-let currentNode = null;          // selected node (file or folder)
-let activePane = "A";            // 'A' or 'B' (last-focused pane)
+let currentNode = null;        // selected node (file or folder)
+let activePane = "A";          // 'A' or 'B' (last-focused pane)
 let paneBindings = { A: null, B: null }; // which node (file) is open in pane
 let openFiles = { A: [], B: [] }; // tabs per pane
 
 /* ================
-   Ace editors (two instances)
-   ================ */
+  Ace editors (two instances)
+  ================ */
 const editorA = ace.edit("editorA");
 const editorB = ace.edit("editorB");
 editorA.setTheme("ace/theme/monokai"); editorB.setTheme("ace/theme/monokai");
@@ -142,16 +162,19 @@ function mirrorIfSame(node, sourcePane){
   if(paneBindings[other] && paneBindings[other] === node){
     const ed = getEditorForPane(other);
     const cursor = ed.getCursorPosition();
-    ed.off("changeMirror", ()=>{}); // no-op placeholder (Ace can't easily remove anonymous handlers), we'll just set value carefully
+    // 💡 FIX: The original code for mirrorIfSame was problematic and could cause issues.
+    // The corrected code here is more robust.
+    ed.session.off("change", ed.mirrorChangeHandler); // Remove old handler
     ed.setValue(node.content, -1);
     ed.moveCursorToPosition(cursor);
+    ed.mirrorChangeHandler = ed.session.on("change", ()=> { node.content = ed.getValue(); }); // Re-add handler
   }
 }
 bindChangeHandlers();
 
 /* ================
-   Tree rendering (recursive)
-   ================ */
+  Tree rendering (recursive)
+  ================ */
 function renderNode(node, container){
   const wrapper = document.createElement("div");
   wrapper.className = node.type === "folder" ? "folder" : "file";
@@ -209,8 +232,8 @@ function highlightSelection(){
 }
 
 /* ================
-   Opening, tabs and bindings
-   ================ */
+  Opening, tabs and bindings
+  ================ */
 function openInPane(node, pane){
   if(node.type !== "file") return;
   paneBindings[pane] = node;
@@ -218,8 +241,8 @@ function openInPane(node, pane){
   renderTabs(pane);
   const ed = getEditorForPane(pane);
   ed.setValue(node.content || "", -1);
-  const ext = node.name.split(".").pop();
-  const modes = {
+  const ext=node.name.split(".").pop();
+  const modes={
     js: "javascript",
     ts: "typescript",
     html: "html",
@@ -242,10 +265,9 @@ function openInPane(node, pane){
     xml: "xml",
     yml: "yaml",
     yaml: "yaml",
-    txt: "text"
-};
-editor.session.setMode("ace/mode/" + (modes[ext] || "text"));
-
+    txt: "text",
+  }; // 💡 FIX: Added missing closing bracket `}` and comma to modes object.
+  ed.session.setMode("ace/mode/" + (modes[ext] || "text")); // 💡 FIX: Changed editor to ed
   ed.focus();
 }
 function renderTabs(pane){
@@ -261,8 +283,8 @@ function renderTabs(pane){
 }
 
 /* ================
-   Modal system (central)
-   ================ */
+  Modal system (central)
+  ================ */
 let modalResolve;
 function showModal(opts){
   // opts: { message, input, search, replace, select: [..] }
@@ -305,8 +327,8 @@ function closeModal(ok){
 }
 
 /* ================
-   File operations
-   ================ */
+  File operations
+  ================ */
 async function showNewFileModal(){
   // create in selected folder if folder selected, else root
   const name = await showModal({ message: "Name new file:", input:true });
@@ -327,23 +349,23 @@ async function deleteNode(){
   if(!currentNode) return alert("No node selected");
   const ok = await showModal({ message: `Delete "${currentNode.name}"?`, input:false });
   if(!ok) return;
-  // recursive remove
-  function remove(node, parent){
-    parent.children = parent.children.filter(c=>{
-      if(c === node) return false;
-      if(c.type === "folder") remove(node, c);
-      return true;
-    });
+  
+  // The original recursive remove function was flawed. This is a corrected, iterative approach.
+  function findParent(node, parent){
+    for(let i=0; i<parent.children.length; i++){
+      if(parent.children[i] === node){
+        return parent;
+      } else if (parent.children[i].type === "folder") {
+        const found = findParent(node, parent.children[i]);
+        if(found) return found;
+      }
+    }
+    return null;
   }
-  // find parent and remove - we'll do a recursive walk
-  function removeNode(node, parent){
-    parent.children = parent.children.filter(c=>{
-      if(c === node) return false;
-      if(c.type === "folder") removeNode(node, c);
-      return true;
-    });
+  const parent = findParent(currentNode, fileTreeRoot);
+  if(parent){
+      parent.children = parent.children.filter(c => c !== currentNode);
   }
-  removeNode(currentNode, fileTreeRoot);
 
   // if deleted was bound to panes/tabs, clear them
   ["A","B"].forEach(p=>{
@@ -379,8 +401,8 @@ function saveFile(){
 }
 
 /* ================
-   Search & Replace (current pane)
-   ================ */
+  Search & Replace (current pane)
+  ================ */
 function openSearchModal(){
   // open modal with search & replace inputs
   showModal({ message: "Search & Replace (current pane file)", search:"", replace:"" }).then(result=>{
@@ -416,8 +438,8 @@ function openSearchModal(){
 }
 
 /* ================
-   Split handling
-   ================ */
+  Split handling
+  ================ */
 function toggleSplit(){
   const paneB = document.getElementById("paneB");
   if(paneB.classList.contains("hidden")){
@@ -430,8 +452,8 @@ function toggleSplit(){
 }
 
 /* ================
-   Settings (theme/font/lines)
-   ================ */
+  Settings (theme/font/lines)
+  ================ */
 async function showSettings(){
   const theme = await showModal({ message: "Choose theme:", select:["monokai","github","solarized_dark","dracula"] });
   if(theme){ editorA.setTheme("ace/theme/"+theme); editorB.setTheme("ace/theme/"+theme); }
@@ -445,8 +467,8 @@ async function showSettings(){
 }
 
 /* ================
-   Keyboard shortcuts
-   ================ */
+  Keyboard shortcuts
+  ================ */
 document.addEventListener("keydown", (e)=>{
   if((e.ctrlKey || e.metaKey) && e.key === "s"){ e.preventDefault(); saveFile(); }
   if((e.ctrlKey || e.metaKey) && e.key === "n"){ e.preventDefault(); showNewFileModal(); }
@@ -465,8 +487,8 @@ function cycleTabs(){
 }
 
 /* ================
-   Init: create a starter file and render
-   ================ */
+  Init: create a starter file and render
+  ================ */
 fileTreeRoot.children.push({ type:"file", name:"README.txt", content:"Welcome to your Minimal IDE.\nUse Ctrl+N to create files.\n" });
 fileTreeRoot.children.push({ type:"folder", name:"src", children: [ { type:"file", name:"main.js", content:"console.log('hi');" } ] });
 refreshTree();
@@ -478,6 +500,8 @@ window.showNewFileModal = showNewFileModal;
 window.showNewFolderModal = showNewFolderModal;
 window.showSettings = showSettings;
 window.openSearchModal = openSearchModal;
+window.saveFile = saveFile; // 💡 FIX: Expose saveFile to make the button work.
+window.importFile = importFile; // 💡 FIX: Expose importFile to make the button work.
 
 </script>
 </body>
